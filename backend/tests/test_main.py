@@ -66,7 +66,6 @@ def test_full_workflow(client: TestClient, mock_launchpad_service, mock_ai_servi
     mock_launchpad_service.fetch_bug_details.return_value = detail
     analysis = AnalysisResponse(
         bug_id=1,
-        is_triaged=False,
         reasoning="Needs more information",
         suggested_actions=[],
     )
@@ -76,7 +75,7 @@ def test_full_workflow(client: TestClient, mock_launchpad_service, mock_ai_servi
     assert response.status_code == 200
     data = response.json()
     assert data["bug_id"] == 1
-    assert data["is_triaged"] is False
+    assert data["reasoning"] == "Needs more information"
     assert data["reasoning"] == "Needs more information"
 
     mock_launchpad_service.add_comment.return_value = None

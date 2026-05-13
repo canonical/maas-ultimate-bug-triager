@@ -53,7 +53,6 @@ Action = Annotated[
 
 class AnalysisResponse(BaseModel):
     bug_id: int
-    is_triaged: bool
     reasoning: str
     suggested_actions: list[Action]
 

@@ -92,7 +92,6 @@ def test_analyze_bug_success(client, mock_launchpad_service, mock_ai_service):
     mock_launchpad_service.fetch_bug_details.return_value = detail
     analysis = AnalysisResponse(
         bug_id=1,
-        is_triaged=False,
         reasoning="Needs more info",
         suggested_actions=[],
     )
@@ -101,7 +100,7 @@ def test_analyze_bug_success(client, mock_launchpad_service, mock_ai_service):
     assert response.status_code == 200
     data = response.json()
     assert data["bug_id"] == 1
-    assert data["is_triaged"] is False
+    assert data["reasoning"] == "Needs more info"
 
 
 def test_analyze_bug_not_found(client, mock_launchpad_service):

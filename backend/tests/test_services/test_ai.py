@@ -71,7 +71,6 @@ def _canned_response(data: dict, use_parsed: bool = True):
 async def test_analyze_bug_returns_analysis_response(service, mock_client):
     response_data = {
         "bug_id": 1,
-        "is_triaged": False,
         "reasoning": "The bug lacks steps to reproduce.",
         "suggested_actions": [
             {"type": "SET_STATUS", "status": "Incomplete"},
@@ -87,7 +86,6 @@ async def test_analyze_bug_returns_analysis_response(service, mock_client):
 
     assert isinstance(result, AnalysisResponse)
     assert result.bug_id == 1
-    assert result.is_triaged is False
     assert result.reasoning == "The bug lacks steps to reproduce."
     assert len(result.suggested_actions) == 2
 
@@ -96,9 +94,11 @@ async def test_analyze_bug_returns_analysis_response(service, mock_client):
 async def test_analyze_bug_parses_text_when_no_parsed(service, mock_client):
     response_data = {
         "bug_id": 1,
-        "is_triaged": True,
-        "reasoning": "The bug is well triaged.",
-        "suggested_actions": [],
+        "reasoning": "The bug is well described.",
+        "suggested_actions": [
+            {"type": "SET_STATUS", "status": "Triaged"},
+            {"type": "SET_IMPORTANCE", "importance": "Medium"},
+        ],
     }
     mock_client.models.generate_content.return_value = _canned_response(
         response_data, use_parsed=False
@@ -108,7 +108,7 @@ async def test_analyze_bug_parses_text_when_no_parsed(service, mock_client):
 
     assert isinstance(result, AnalysisResponse)
     assert result.bug_id == 1
-    assert result.is_triaged is True
+    assert len(result.suggested_actions) == 2
 
 
 @pytest.mark.asyncio
@@ -126,9 +126,8 @@ async def test_analyze_bug_invalid_json_raises(service, mock_client):
 async def test_analyze_bug_invalid_schema_raises(service, mock_client):
     response_data = {
         "bug_id": 1,
-        "is_triaged": "not_a_bool",
         "reasoning": "bad data",
-        "suggested_actions": [],
+        "suggested_actions": "not_a_list",
     }
     mock_response = MagicMock()
     mock_response.parsed = None
@@ -182,9 +181,11 @@ async def test_analyze_bug_calls_generate_content_with_correct_params(
 ):
     response_data = {
         "bug_id": 1,
-        "is_triaged": True,
         "reasoning": "ok",
-        "suggested_actions": [],
+        "suggested_actions": [
+            {"type": "SET_STATUS", "status": "Triaged"},
+            {"type": "SET_IMPORTANCE", "importance": "Medium"},
+        ],
     }
     mock_client.models.generate_content.return_value = _canned_response(response_data)
 
@@ -194,4 +195,7 @@ async def test_analyze_bug_calls_generate_content_with_correct_params(
     assert call_args.kwargs["model"] == "gemini-2.5-pro"
     config_arg = call_args.kwargs["config"]
     assert config_arg.response_mime_type == "application/json"
-    assert not hasattr(config_arg, "response_schema") or config_arg.response_schema is None
+    assert (
+        not hasattr(config_arg, "response_schema")
+        or config_arg.response_schema is None
+    )

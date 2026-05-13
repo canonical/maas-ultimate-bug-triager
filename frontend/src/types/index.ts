@@ -69,7 +69,6 @@ export type Action =
 
 export interface AnalysisResponse {
   bug_id: number;
-  is_triaged: boolean;
   reasoning: string;
   suggested_actions: Action[];
 }

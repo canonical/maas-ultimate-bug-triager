@@ -226,26 +226,17 @@ export default function BugTriageView() {
         {loading ? (
           <Spinner />
         ) : analysis ? (
-          <div className="space-y-3">
-            {analysis.is_triaged && (
-              <span className="inline-block rounded bg-green-600 px-3 py-1 text-sm font-medium text-white">
-                Already Triaged
-              </span>
-            )}
-            {!analysis.is_triaged && (
-              <div className="rounded border border-gray-700 bg-gray-800 p-4">
-                <p className="whitespace-pre-wrap text-sm text-gray-300">
-                  {analysis.reasoning}
-                </p>
-              </div>
-            )}
+          <div className="rounded border border-gray-700 bg-gray-800 p-4">
+            <p className="whitespace-pre-wrap text-sm text-gray-300">
+              {analysis.reasoning}
+            </p>
           </div>
         ) : (
           <p className="text-sm text-gray-500">No analysis available.</p>
         )}
       </div>
 
-      {analysis && !analysis.is_triaged && (
+      {analysis && (
         <div>
           <h3 className="mb-3 text-lg font-semibold text-white">Suggested Actions</h3>
           <ActionEditor
