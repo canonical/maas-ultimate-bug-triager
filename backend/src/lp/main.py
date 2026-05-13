@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 """CLI to reproduce a MAAS bug by its Launchpad bug ID."""
 
+import asyncio
 from typing import Annotated
 
 import typer
+from lp.reproducer import reproduce_bug
 
 from lp import get_bug_by_id, get_launchpad_instance
-from lp.reproducer import reproduce_bug
 
 app = typer.Typer()
 
@@ -29,7 +30,7 @@ def reproduce(
     typer.echo(f"  MAAS IP: {maas_ip}")
     typer.echo()
 
-    reproduce_bug(bug, maas_ip=maas_ip)
+    asyncio.run(reproduce_bug(bug, maas_ip=maas_ip))
 
 
 if __name__ == "__main__":

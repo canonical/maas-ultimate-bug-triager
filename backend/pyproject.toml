@@ -16,7 +16,11 @@ dependencies = [
     "pydantic>=2.11",
     "pyyaml>=6.0",
     "keyring>=25.6",
+    "lp",
 ]
+
+[tool.uv.sources]
+lp = { path = "src/lp", editable = true }
 
 [project.scripts]
 maas-triager = "maas_ultimate_bug_triager.main:main"

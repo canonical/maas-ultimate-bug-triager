@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from maas_ultimate_bug_triager.api.bugs import router as bugs_router
 from maas_ultimate_bug_triager.api.config import router as config_router
+from maas_ultimate_bug_triager.api.reproducer import router as reproducer_router
 from maas_ultimate_bug_triager.auth import (
     get_launchpad_credentials,
     try_stored_credentials,
@@ -62,6 +63,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     )
     app.include_router(bugs_router)
     app.include_router(config_router)
+    app.include_router(reproducer_router)
     return app
 
 

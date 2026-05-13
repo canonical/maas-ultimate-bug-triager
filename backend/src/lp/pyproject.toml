@@ -3,7 +3,7 @@ name = "lp"
 version = "0.1.0"
 description = "MAAS bug triager"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "keyring>=25.7.0",
     "launchpadlib",
