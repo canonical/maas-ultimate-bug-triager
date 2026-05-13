@@ -1,11 +1,9 @@
-from launchpadlib.launchpad import Launchpad
-
-from lp.bugs import get_untriaged_bugs
+from lp.bugs import get_launchpad_instance, get_untriaged_bugs
 
 
 def main():
     # Connect to Launchpad (will use existing credentials or prompt for new ones)
-    lp = Launchpad.login_with("MAAS Bug Triager", "production")
+    lp = get_launchpad_instance()
 
     bug_reports = get_untriaged_bugs(lp)
     print(f"Found {len(bug_reports)} untriaged bugs in MAAS\n")

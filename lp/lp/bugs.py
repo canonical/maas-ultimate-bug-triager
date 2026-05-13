@@ -24,6 +24,10 @@ class BugReport:
     messages: List[BugMessage]
 
 
+def get_launchpad_instance() -> Launchpad:
+    return Launchpad.login_with("MAAS Bug Triager", "production")
+
+
 def get_untriaged_bugs(lp: Launchpad) -> List[BugReport]:
     """Return a list of untriaged MAAS bugs as structured dataclasses."""
     maas = lp.projects["maas"]  # type: ignore
