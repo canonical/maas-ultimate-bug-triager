@@ -1,0 +1,72 @@
+{
+  "filled_template": {
+    "id": "2146809",
+    "title": "Sometimes disks in Linux are not named correctly",
+    "maas_version": "3.7 (snap)",
+    "environment": [
+      "Testflinger automation environment",
+      "Physical server (ledian)"
+    ],
+    "interface": "UI",
+    "related_bugs": [],
+    "description": "When deploying machines where disks have been custom named in MAAS (e.g., disk0 and disk1), the corresponding symlinks in the deployed Linux environment are intermittently missing. Specifically, disk1 occasionally fails to appear despite being configured in MAAS. This was observed on a specific server (ledian) with a 20% failure rate (1/5 deployments) and was not noticed in MAAS 3.5.",
+    "steps_to_reproduce": [
+      "Name two disks in MAAS as 'disk0' and 'disk1' for a machine.",
+      "Deploy the machine using Testflinger or MAAS UI.",
+      "Check for the presence of the disk symlinks (likely in /dev/disk/by-dname/) in the deployed OS.",
+      "Repeat deployment multiple times if the issue does not occur immediately."
+    ],
+    "expected_result": "Consistent disk naming/symlinks (disk0 and disk1) as configured in the MAAS UI.",
+    "actual_result": "Sometimes disk1 is not present in the deployed Linux system.",
+    "logs": [
+      {
+        "description": "Testflinger test phase logs showing missing disk1",
+        "url": null
+      }
+    ],
+    "attachments": [],
+    "vm_host_info": {
+      "name": "ledian",
+      "total": {
+        "cores": 0,
+        "memory": 0,
+        "local_storage": 0
+      }
+    },
+    "actual_resources": {
+      "memory": null,
+      "swap": null,
+      "numa": {
+        "nodes": 1,
+        "node0_cpus": null
+      }
+    },
+    "vm_allocation": {
+      "vms_running": 0,
+      "cpu_cores_allocated": 0,
+      "others": 0,
+      "free": 0
+    },
+    "reporter": "Marian Gasparovic",
+    "date_reported": "2026-03-30",
+    "status": "new",
+    "priority": "medium",
+    "milestone": null,
+    "affected_projects": [
+      "maas"
+    ],
+    "assigned_to": null,
+    "is_feature_request": false,
+    "reproduction_status": "needs info",
+    "notes": "Intermittent issue (approx 20% repro rate on specific hardware). Regression from 3.5 suspected."
+  },
+  "is_complete": false,
+  "completeness_summary": "The report identifies an intermittent bug regarding disk symlink creation but lacks critical logs (curtin logs, cloud-init logs, or udev logs) and specific environment details (OS being deployed). It also doesn't confirm if the physical device itself (e.g., /dev/sda) is present when the symlink is missing.",
+  "clarifying_questions": [
+    "Which operating system and version are you deploying to these machines?",
+    "Could you provide the curtin installation logs (typically found in /var/log/curtin/ or via the MAAS UI) for a failed deployment?",
+    "When 'disk1' is missing, is the underlying block device (e.g., /dev/sda or /dev/nvme1n1) still visible in the output of 'lsblk'?",
+    "Are these symlinks being checked in /dev/disk/by-dname/ or a different path?",
+    "Can you provide the output of 'udevadm info /dev/sda' (or whichever device should be disk1) from both a successful and a failed deployment?"
+  ]
+}

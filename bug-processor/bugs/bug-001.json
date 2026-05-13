@@ -1,0 +1,46 @@
+{
+  "id": "bug-001",
+  "title": "Resource counts zeroed out for LXD KVM pod, VM creation fails",
+  "maas_version": "3.6.2 (snap, 24.04)",
+  "environment": ["Virsh based KVM pod", "LXD based KVM pod"],
+  "interface": "UI",
+  "related_bugs": ["https://bugs.launchpad.net/maas/+bug/2048399"],
+  "description": "When adding a LXD host as a KVM pod, the resource counts (cores, memory) are reported as zero in the MAAS UI and API, despite the host having ample resources. Attempting to compose a VM results in a validation error due to the core count.",
+  "steps_to_reproduce": [
+    "Add a LXD host as a KVM pod.",
+    "Ensure the host has ample resources (RAM, CPU, storage).",
+    "Click refresh host to update hypervisor info.",
+    "Attempt to compose a VM in the UI."
+  ],
+  "expected_result": "VM is created successfully.",
+  "actual_result": "A field validation error is shown in the UI. Journald logs indicate an issue with the available core count. 'maas admin vm-hosts read' shows resource counts as zero.",
+  "logs": [
+    {"description": "journald error log", "url": "https://paste.ubuntu.com/p/6pwHrM7hMv/plain/"}
+  ],
+  "attachments": [],
+  "vm_host_info": {
+    "name": "supermicro",
+    "total": {"cores": 0, "memory": 0, "local_storage": 7610403520512}
+  },
+  "actual_resources": {
+    "memory": "251Gi total, 170Gi used, 67Gi free, 34Gi shared, 50Gi buff/cache, 80Gi available",
+    "swap": "8.0Gi total, 2.5Gi used, 5.5Gi free",
+    "numa": {"nodes": 1, "node0_cpus": "0-127"}
+  },
+  "vm_allocation": {
+    "vms_running": 7,
+    "cpu_cores_allocated": 32,
+    "others": 32,
+    "free": 1216
+  },
+  "reporter": "",
+  "date_reported": "2026-05-13",
+  "status": "new",
+  "priority": "",
+  "milestone": "",
+  "affected_projects": ["maas"],
+  "assigned_to": "",
+  "is_feature_request": false,
+  "reproduction_status": "reproducible",
+  "notes": "Likely a regression or continuation of previous bug 2048399. Needs investigation."
+}

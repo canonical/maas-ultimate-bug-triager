@@ -1,0 +1,63 @@
+{
+  "filled_template": {
+    "id": "bug-2151214",
+    "title": "Wortmann TERRA SERVER 7120 G3 commissioning switches power type from Redfish to IPMI when SMBIOS DMI type 42 is missing",
+    "maas_version": "3.7.2-17972 (snap, 24.04)",
+    "environment": [
+      "single node"
+    ],
+    "interface": "UI/API",
+    "related_bugs": [],
+    "description": "On Wortmann_AG TERRA_SERVER (Intel S2600WFT), machines manually configured to use Redfish power control are reverted to IPMI after commissioning. The commissioning script 30-maas-01-bmc-config attempts to auto-detect Redfish via SMBIOS type 42. Since this hardware lacks that record, the script falls back to IPMI detection. This breaks power management in environments where IPMI is firewalled but Redfish is accessible.",
+    "steps_to_reproduce": [
+      "Add/enlist the server Wortmann_AG TERRA_SERVER R1208WFTYSR into MAAS.",
+      "In MAAS UI/API, set the machine Power type = Redfish and configure valid Redfish address/credentials.",
+      "Confirm power actions work via Redfish.",
+      "Commission the machine.",
+      "After commissioning completes, check the machine\u2019s power configuration / attempt a power action."
+    ],
+    "expected_result": "Commissioning should not change an explicitly user-configured power type. If Redfish Host Interface (SMBIOS type 42) is missing, MAAS should leave existing power settings intact unless explicitly requested otherwise.",
+    "actual_result": "30-maas-01-bmc-config reports 'Missing SMBIOS data' for Redfish, falls back to 'IPMI detected!', and configures an IPMI user, effectively switching the machine's power configuration to IPMI.",
+    "logs": [],
+    "attachments": [
+      {
+        "description": "Hardware platform description",
+        "url": "https://www.wortmann.de/en-gb/content/terraserver-7000_serie_g3.aspx"
+      }
+    ],
+    "vm_host_info": {
+      "name": "Wortmann_AG TERRA_SERVER R1208WFTYSR",
+      "total": {
+        "cores": 0,
+        "memory": 0,
+        "local_storage": 0
+      }
+    },
+    "actual_resources": {
+      "memory": null,
+      "swap": null,
+      "numa": null
+    },
+    "vm_allocation": {
+      "vms_running": 0,
+      "cpu_cores_allocated": 0,
+      "others": 0,
+      "free": 0
+    },
+    "reporter": "Bartosz Woronicz",
+    "date_reported": "2026-05-05",
+    "status": "new",
+    "priority": "medium",
+    "milestone": null,
+    "affected_projects": [
+      "maas"
+    ],
+    "assigned_to": null,
+    "is_feature_request": false,
+    "reproduction_status": "reproducible",
+    "notes": "The issue is linked to the logic in src/metadataserver/builtin_scripts/commissioning_scripts/bmc_config.py where Redfish detection failure triggers an unconditional fallback to IPMI configuration."
+  },
+  "is_complete": true,
+  "completeness_summary": "The bug report is very detailed and provides specific hardware information, the exact MAAS version (3.7.2 snap), clear reproduction steps, and even pointers to the problematic code in the MAAS repository. It explains the environment-specific impact (firewall blocking IPMI). No critical information is missing for triage.",
+  "clarifying_questions": []
+}

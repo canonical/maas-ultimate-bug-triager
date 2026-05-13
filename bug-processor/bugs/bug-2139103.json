@@ -1,0 +1,50 @@
+{
+  "filled_template": {
+    "id": "bug-2139103",
+    "title": "smartctl.py fails on some RAID volumes that dont support self_test, making requiring someone to manually override",
+    "maas_version": "3.5.10 (snap)",
+    "environment": [
+      "HA MAAS",
+      "Hardware RAID (HPE LOGICAL VOLUME)",
+      "Edge cloud",
+      "Kernel 5.15.0-164-generic"
+    ],
+    "interface": "CLI",
+    "related_bugs": [],
+    "description": "On hardware RAID volumes, some LUNs do not support SMART self-tests. When commissioning, the smartctl.py script attempts to run a short self-test; if the device does not support this, the script fails, causing the entire commissioning process to fail and requiring manual override. The script should instead recognize the lack of support, note it, and continue.",
+    "steps_to_reproduce": [
+      "Commission a machine (e.g., 'cajal') equipped with a hardware RAID controller where the logical volume does not support SMART self-tests.",
+      "Observe that the 'smartctl-validate' commissioning script fails during the self-test phase."
+    ],
+    "expected_result": "smartctl.py should recognize that self-test is not supported by the device (e.g., 'Device does not support Self Test logging') and skip the test or mark it as passed/skipped rather than failing the commissioning process.",
+    "actual_result": "Commissioning fails with 'ERROR: Failed to start smartctl self-test: short', making the machine unusable without manual intervention.",
+    "logs": [
+      {
+        "description": "smartctl validation output",
+        "url": "Provided in bug report description"
+      }
+    ],
+    "attachments": [],
+    "vm_host_info": null,
+    "actual_resources": null,
+    "vm_allocation": null,
+    "reporter": "Jeff Lane",
+    "date_reported": "2026-01-26",
+    "status": "new",
+    "priority": "medium",
+    "milestone": null,
+    "affected_projects": [
+      "maas"
+    ],
+    "assigned_to": null,
+    "is_feature_request": false,
+    "reproduction_status": "reproducible",
+    "notes": "The log indicates a kernel version of 5.15.0, which suggests the host/ephemeral OS is likely Ubuntu 22.04, despite the reporter's guess of 24.04."
+  },
+  "is_complete": true,
+  "completeness_summary": "The bug report is highly informative. It identifies the specific script failing (smartctl.py), provides the MAAS version, the specific hardware context (HPE Logical Volume), and includes the exact log output showing the error and the SMART capability mismatch. This is sufficient for a developer to locate the logic error in the script's handling of smartctl return codes/output.",
+  "clarifying_questions": [
+    "The log shows a 5.15 kernel; can you confirm if the ephemeral environment is actually Ubuntu 22.04 or if you are using a custom kernel on 24.04?",
+    "Are there other specific hardware RAID models besides the HPE Logical Volume where you have encountered this issue?"
+  ]
+}
