@@ -5,6 +5,7 @@ import json
 import logging
 import time
 
+import httpx
 from google import genai
 from google.genai.types import GenerateContentConfig
 
@@ -13,6 +14,11 @@ from maas_ultimate_bug_triager.models.action import AnalysisResponse
 from maas_ultimate_bug_triager.models.bug import BugDetail
 
 logger = logging.getLogger(__name__)
+
+BUG_REPORTING_GUIDELINES_URL = (
+    "https://raw.githubusercontent.com/canonical/maas/refs/heads/master"
+    "/docs/uncategorized/report-a-bug.md"
+)
 
 _SYSTEM_INSTRUCTION = (
     "You are a MAAS bug triager. Analyze the bug report and suggest triage actions. "
@@ -29,6 +35,12 @@ _PROMPT_TEMPLATE = (
     "Analyze the following bug report and suggest actions to triage it. "
     "The bug is in the \"{bug_status}\" state and needs triaging. "
     "Always suggest a status and importance to set.\n"
+    "\n"
+    "## MAAS Bug Reporting Guidelines\n"
+    "Use these guidelines to evaluate the quality of the bug report:\n"
+    "{bug_reporting_guidelines}\n"
+    "If you need to point the reporter to these guidelines, refer them to: "
+    "https://canonical.com/maas/docs/how-to-report-and-review-bugs\n"
     "\n"
     "## Bug Report\n"
     "- **ID**: {bug_id}\n"
@@ -93,7 +105,7 @@ def _format_attachments(attachments: list) -> str:
     return "\n".join(f"- {att.title}" for att in attachments)
 
 
-def _build_prompt(bug: BugDetail) -> str:
+def _build_prompt(bug: BugDetail, bug_reporting_guidelines: str) -> str:
     return _PROMPT_TEMPLATE.format(
         bug_id=bug.id,
         bug_title=bug.title,
@@ -107,6 +119,7 @@ def _build_prompt(bug: BugDetail) -> str:
         formatted_attachments=_format_attachments(bug.attachments),
         _valid_statuses=_VALID_STATUSES,
         _valid_importances=_VALID_IMPORTANCES,
+        bug_reporting_guidelines=bug_reporting_guidelines,
     )
 
 
@@ -114,9 +127,24 @@ class AIService:
     def __init__(self, config: AIConfig) -> None:
         self.config = config
         self.client = genai.Client(api_key=config.api_key)
+        self._bug_reporting_guidelines = self._fetch_bug_reporting_guidelines()
+
+    def _fetch_bug_reporting_guidelines(self) -> str:
+        try:
+            response = httpx.get(BUG_REPORTING_GUIDELINES_URL, timeout=30)
+            response.raise_for_status()
+            logger.info("Fetched bug reporting guidelines from %s", BUG_REPORTING_GUIDELINES_URL)
+            return response.text
+        except Exception:
+            logger.warning(
+                "Failed to fetch bug reporting guidelines from %s",
+                BUG_REPORTING_GUIDELINES_URL,
+                exc_info=True,
+            )
+            return "Guidelines unavailable."
 
     async def analyze_bug(self, bug: BugDetail) -> AnalysisResponse:
-        prompt = _build_prompt(bug)
+        prompt = _build_prompt(bug, self._bug_reporting_guidelines)
         config = GenerateContentConfig(
             response_mime_type="application/json",
             system_instruction=_SYSTEM_INSTRUCTION,

@@ -11,6 +11,8 @@ from maas_ultimate_bug_triager.models.action import AnalysisResponse
 from maas_ultimate_bug_triager.models.bug import Attachment, BugDetail, Comment
 from maas_ultimate_bug_triager.services.ai import AIService, _build_prompt
 
+_FAKE_GUIDELINES = "# Report a bug\nFake guidelines for testing."
+
 
 @pytest.fixture
 def mock_client():
@@ -21,7 +23,19 @@ def mock_client():
 
 
 @pytest.fixture
-def service(mock_client):
+def mock_guidelines():
+    with patch(
+        "maas_ultimate_bug_triager.services.ai.httpx.get"
+    ) as mock_get:
+        mock_response = MagicMock()
+        mock_response.text = _FAKE_GUIDELINES
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+        yield mock_get
+
+
+@pytest.fixture
+def service(mock_client, mock_guidelines):
     config = AIConfig(api_key="test-key")
     return AIService(config)
 
@@ -151,7 +165,7 @@ def test_get_available_models(service):
 
 def test_prompt_includes_bug_fields():
     bug = _make_bug()
-    prompt = _build_prompt(bug)
+    prompt = _build_prompt(bug, _FAKE_GUIDELINES)
 
     assert str(bug.id) in prompt
     assert bug.title in prompt
@@ -164,11 +178,12 @@ def test_prompt_includes_bug_fields():
     assert bug.comments[0].author in prompt
     assert bug.comments[0].content in prompt
     assert "screenshot.png" in prompt
+    assert _FAKE_GUIDELINES in prompt
 
 
 def test_prompt_handles_empty_collections():
     bug = _make_bug(tags=[], comments=[], attachments=[])
-    prompt = _build_prompt(bug)
+    prompt = _build_prompt(bug, _FAKE_GUIDELINES)
 
     assert "None" in prompt
     assert "No comments." in prompt
@@ -199,3 +214,16 @@ async def test_analyze_bug_calls_generate_content_with_correct_params(
         not hasattr(config_arg, "response_schema")
         or config_arg.response_schema is None
     )
+
+
+def test_guidelines_fetch_failure_uses_fallback():
+    with (
+        patch("maas_ultimate_bug_triager.services.ai.genai.Client"),
+        patch(
+            "maas_ultimate_bug_triager.services.ai.httpx.get",
+            side_effect=Exception("network error"),
+        ),
+    ):
+        config = AIConfig(api_key="test-key")
+        service = AIService(config)
+        assert service._bug_reporting_guidelines == "Guidelines unavailable."
