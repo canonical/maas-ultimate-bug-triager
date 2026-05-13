@@ -17,6 +17,11 @@ from copilot.session import PermissionHandler
 from .bugs import BugReport
 
 
+def extract_version(ip: str) -> str:
+    # Very specific to the version of the setup script I have.
+    return str(int(ip.split(".")[2]) - 60)
+
+
 def _build_maas_prompt(bug: BugReport, maas_ip: str) -> str:
     """Build a prompt for the Copilot agent to reproduce a MAAS bug.
 
@@ -51,9 +56,12 @@ def _build_maas_prompt(bug: BugReport, maas_ip: str) -> str:
    ```
    For example: `ssh ubuntu@{maas_ip} "maas admin machines read"`
 3. Use the MAAS CLI to inspect the current state of the system and attempt to reproduce the reported issue.
-4. You can check the documentation of MAAS in http://{maas_ip}:5240/MAAS/docs/. The code can be found in ~/Canonical/maas-38.
-5. Report what you find — whether you successfully reproduced the bug or not, and any relevant observations.
+4. You can check the documentation of MAAS in http://{maas_ip}:5240/MAAS/docs/. The code can be found in ~/Canonical/maas-{extract_version(maas_ip)}.
+5. Report what you find — whether you successfully reproduced the bug or not, and any relevant observations. Put all findings in a `report` folder in this directory on a SINGLE FILE named `LP-{bug.id}.md`.
 6. Do NOT change anything related to the machine maas-host.
+7. If you create VMs, only create with 1 core and at most 8gb of memory.
+8. Clean up after yourself when finished (e.g., if creating VMs, delete them after the test. If creating subnets, delete them as well etc.)
+9. After `LP-{bug.id}` is created, your task is done and you can end.
 """
 
 
