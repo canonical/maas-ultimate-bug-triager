@@ -1,0 +1,16 @@
+[project]
+name = "lp"
+version = "0.1.0"
+description = "MAAS bug triager"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "keyring>=25.7.0",
+    "launchpadlib",
+    "github-copilot-sdk",
+    "typer",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lp*"]
