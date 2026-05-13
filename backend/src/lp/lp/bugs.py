@@ -67,7 +67,7 @@ def get_bug_by_id(lp: Launchpad, bug_id: int) -> BugReport:
     )
 
 
-def get_untriaged_bugs(lp: Launchpad) -> Generator[BugReport]:
+def get_untriaged_bugs(lp: Launchpad) -> Generator[BugReport, None, None]:
     """Return a list of untriaged MAAS bugs as structured dataclasses."""
     maas = lp.projects["maas"]  # type: ignore
 

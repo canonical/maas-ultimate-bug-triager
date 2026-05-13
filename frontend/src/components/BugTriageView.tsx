@@ -1,10 +1,12 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import { useBugAnalysis } from "../hooks/useBugAnalysis";
 import { useToast } from "../hooks/useToast";
 import { TriageStatus } from "../types";
+import { streamReproduction } from "../api/client";
 import CommentTimeline from "./CommentTimeline";
 import ActionEditor from "./ActionEditor";
+import ReproductionConsole from "./ReproductionConsole";
 import { CommentsSkeleton, AnalysisSkeleton, DetailSkeleton } from "./Skeleton";
 
 function StatusBadge({ status }: { status: string }) {
@@ -66,6 +68,28 @@ export default function BugTriageView() {
     applyActions,
   } = useBugAnalysis(selectedBugId);
 
+  // Reproduction state
+  const [reproLines, setReproLines] = useState<string[]>([]);
+  const [reproStreaming, setReproStreaming] = useState(false);
+  const [reproError, setReproError] = useState<string | null>(null);
+  const [reproVisible, setReproVisible] = useState(false);
+  const [maasIp, setMaasIp] = useState("");
+  const [showIpInput, setShowIpInput] = useState(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
+
+  // Reset reproduction state when switching bugs
+  useEffect(() => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+    setReproLines([]);
+    setReproStreaming(false);
+    setReproError(null);
+    setReproVisible(false);
+    setShowIpInput(false);
+  }, [selectedBugId]);
+
   useEffect(() => {
     topRef.current?.scrollIntoView({ block: "start" });
   }, [selectedBugId]);
@@ -98,6 +122,37 @@ export default function BugTriageView() {
       addToast("Failed to apply actions", "error");
     }
   }, [applyActions, addToast]);
+
+  const startReproduction = useCallback(() => {
+    if (!bugDetail || !maasIp.trim()) return;
+
+    // Close any existing stream
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    setReproLines([]);
+    setReproStreaming(true);
+    setReproError(null);
+    setReproVisible(true);
+    setShowIpInput(false);
+
+    const es = streamReproduction(
+      bugDetail.id,
+      maasIp.trim(),
+      (text) => {
+        setReproLines((prev) => [...prev, text]);
+      },
+      (_event) => {
+        setReproStreaming(false);
+        setReproError("Connection lost or error occurred");
+      },
+      () => {
+        setReproStreaming(false);
+      },
+    );
+    eventSourceRef.current = es;
+  }, [bugDetail, maasIp]);
 
   if (selectedBugId === null) {
     return (
@@ -169,6 +224,65 @@ export default function BugTriageView() {
           <pre className="whitespace-pre-wrap break-words text-sm text-gray-300">
             {bugDetail.description}
           </pre>
+        </div>
+
+        {/* Reproduce Bug section */}
+        <div className="mt-3">
+          {!showIpInput && !reproVisible && (
+            <button
+              className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+              onClick={() => setShowIpInput(true)}
+              disabled={reproStreaming}
+            >
+              🐛 Reproduce Bug
+            </button>
+          )}
+          {showIpInput && (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="MAAS IP (e.g. 10.0.0.72)"
+                value={maasIp}
+                onChange={(e) => setMaasIp(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") startReproduction();
+                  if (e.key === "Escape") setShowIpInput(false);
+                }}
+                className="w-56 rounded border border-gray-600 bg-gray-800 px-2 py-1.5 text-sm text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
+                autoFocus
+              />
+              <button
+                className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+                onClick={startReproduction}
+                disabled={!maasIp.trim()}
+              >
+                Start
+              </button>
+              <button
+                className="rounded bg-gray-700 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-600"
+                onClick={() => setShowIpInput(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+          {reproVisible && (
+            <div className="mt-3">
+              <ReproductionConsole
+                lines={reproLines}
+                streaming={reproStreaming}
+                error={reproError}
+                onDismiss={() => {
+                  if (eventSourceRef.current) {
+                    eventSourceRef.current.close();
+                    eventSourceRef.current = null;
+                  }
+                  setReproVisible(false);
+                  setReproStreaming(false);
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
