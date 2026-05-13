@@ -1,0 +1,52 @@
+{
+  "filled_template": {
+    "id": "bug-2147706",
+    "title": "Unable to commission new machines unless fabrics are pristine",
+    "maas_version": "3.7.2 (snap, 3.7.2-17972-g.35e297c4d)",
+    "environment": [
+      "HA (2 combined region+rack controllers, 1 separate database server)",
+      "Host OS: Ubuntu 24.04.4 LTS"
+    ],
+    "interface": null,
+    "related_bugs": [
+      "https://bugs.launchpad.net/maas/+bug/1988976"
+    ],
+    "description": "Unless the fabrics from an earlier commissioning are cleaned up, the 50-maas-01-commissioning script fails during post processing with the error: maasserver.models.interface.MultipleObjectsReturned: get() returned more than one PhysicalInterface -- it returned 2!. This occurred in 3.7.1 when commissioning more than 2 servers, but in 3.7.2, it requires manual cleanup of fabrics between small batches of servers.",
+    "steps_to_reproduce": [
+      "Commission a couple of servers that have multiple NICs (e.g., 4) so that it results in a set of fabrics being created.",
+      "Wait for this to complete and note that 50-maas-01-commissioning succeeds in a pristine environment.",
+      "Commission another couple of servers without cleaning up the fabrics from the previous step."
+    ],
+    "expected_result": "Commissioning should succeed for all servers regardless of existing fabrics.",
+    "actual_result": "Commissioning fails on the 50-maas-01-commissioning script during post-processing with a MultipleObjectsReturned error.",
+    "logs": [
+      {
+        "description": "Full stack trace from maas-regiond",
+        "url": "See bug report description"
+      }
+    ],
+    "attachments": [],
+    "vm_host_info": null,
+    "actual_resources": null,
+    "vm_allocation": null,
+    "reporter": "Kevin Reeuwijk",
+    "date_reported": "2026-04-10",
+    "status": "new",
+    "priority": "medium",
+    "milestone": null,
+    "affected_projects": [
+      "maas"
+    ],
+    "assigned_to": null,
+    "is_feature_request": false,
+    "reproduction_status": "reproducible",
+    "notes": "The reporter suggests the issue is due to the use of get_or_create() in the commissioning script hooks, specifically in maasserver/models/interface.py."
+  },
+  "is_complete": true,
+  "completeness_summary": "The report is highly detailed, providing the exact MAAS version, environment (HA), a clear set of reproduction steps, and a full Python stack trace. It even references a related known issue regarding get_or_create() behavior.",
+  "clarifying_questions": [
+    "Are the fabrics being created automatically by MAAS during discovery, or are they manually defined?",
+    "Do the NICs on these servers share MAC addresses or any other identifying characteristics that might cause a collision in the database?",
+    "Can you provide the output of 'maas $PROFILE fabrics read' after the first set of servers is commissioned?"
+  ]
+}

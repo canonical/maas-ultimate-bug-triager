@@ -1,0 +1,84 @@
+{
+  "filled_template": {
+    "id": "bug-2133892",
+    "title": "Error when attempting to compose LXD VMs: this value is less than or equal to 0",
+    "maas_version": "3.6.2 (snap, 24.04)",
+    "environment": [
+      "Virsh based KVM pod",
+      "LXD based KVM pod"
+    ],
+    "interface": "UI",
+    "related_bugs": [
+      "https://bugs.launchpad.net/maas/+bug/2048399"
+    ],
+    "description": "When attempting to compose a VM on an LXD or Virsh host, MAAS fails with a validation error because the total cores and memory for the VM host are recorded as zero in the database. This occurs even when the host has ample resources. The root cause appears to be a failure during the background commissioning process of the 'fake' machine object representing the VM host, specifically a Django ValidationError related to VLAN interface configurations.",
+    "steps_to_reproduce": [
+      "Add a LXD host as a KVM pod.",
+      "Ensure there are ample resources on the host (RAM, CPU, storage).",
+      "Click 'Refresh host' to update hypervisor info.",
+      "Attempt to compose a VM in the MAAS UI."
+    ],
+    "expected_result": "The VM is successfully created and resources are correctly allocated.",
+    "actual_result": "A field validation error is shown in the UI: 'Ensure this value is less than or equal to 0'. CLI output 'maas admin vm-hosts read' shows cores and memory as 0.",
+    "logs": [
+      {
+        "description": "journald log error output",
+        "url": "https://paste.ubuntu.com/p/6pwHrM7hMv/plain/"
+      },
+      {
+        "description": "vm-host refresh output",
+        "url": "https://paste.ubuntu.com/p/5HbwSMy5jy/"
+      },
+      {
+        "description": "50-maas-01-commissioning JSON output",
+        "url": "https://pastebin.ubuntu.com/p/5jBty2yKK6/"
+      },
+      {
+        "description": "Netplan configuration of the host",
+        "url": "https://paste.ubuntu.com/p/m7gpXDcnKj/"
+      }
+    ],
+    "attachments": [],
+    "vm_host_info": {
+      "name": "supermicro",
+      "total": {
+        "cores": 0,
+        "memory": 0,
+        "local_storage": 7610403520512
+      }
+    },
+    "actual_resources": {
+      "memory": "251Gi",
+      "swap": "8.0Gi",
+      "numa": {
+        "nodes": 1,
+        "node0_cpus": "0-127"
+      }
+    },
+    "vm_allocation": {
+      "vms_running": 7,
+      "cpu_cores_allocated": 32,
+      "others": 32,
+      "free": 1216
+    },
+    "reporter": "Dagmawi Biru",
+    "date_reported": "2025-12-04",
+    "status": "new",
+    "priority": "medium",
+    "milestone": null,
+    "affected_projects": [
+      "maas"
+    ],
+    "assigned_to": null,
+    "is_feature_request": false,
+    "reproduction_status": "reproducible",
+    "notes": "The logs indicate a Django ValidationError: {'vlan': ['VLAN interface requires connection to a VLAN.']}. This suggests the internal MAAS logic fails to process the host's networking (which has many veths/bridges/vlans), preventing the resource update."
+  },
+  "is_complete": true,
+  "completeness_summary": "The report is highly detailed, providing version info, logs from various stages (journald, commissioning scripts), and specific DB/CLI outputs. The reporter even identified the specific validation error causing the sync to fail.",
+  "clarifying_questions": [
+    "Could you provide the output of the '20-maas-03-machine-resources' commissioning script as previously requested in the discussion?",
+    "Can you provide a screenshot of the 'Networking' tab for the machine object representing the VM host to see how MAAS is currently mapping those interfaces?",
+    "Are there any specific VLAN interfaces on the host that are not connected to a physical interface or a bridge that might be triggering the 'requires connection to a VLAN' error?"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "id": "bug-002",
+  "title": "<Short bug summary>",
+  "maas_version": "<e.g., 3.6.2 (snap, 24.04)>",
+  "environment": ["<e.g., Virsh based KVM pod>", "<e.g., LXD based KVM pod>"] ,
+  "interface": "<UI/CLI/API>",
+  "related_bugs": ["<Launchpad or other bug URLs>"] ,
+  "description": "<Detailed bug description>",
+  "steps_to_reproduce": ["Step 1", "Step 2", "Step 3"] ,
+  "expected_result": "<What should happen>",
+  "actual_result": "<What actually happens>",
+  "logs": [
+    {"description": "journald log", "url": "<log URL or path>"},
+    {"description": "sosreport", "url": "<log URL or path>"}
+  ],
+  "attachments": [
+    {"description": "screenshot of error", "url": "<screenshot URL or path>"}
+  ],
+  "vm_host_info": {
+    "name": "<host name>",
+    "total": {"cores": 0, "memory": 0, "local_storage": 0}
+  },
+  "actual_resources": {
+    "memory": "<memory info>",
+    "swap": "<swap info>",
+    "numa": {"nodes": 1, "node0_cpus": "0-127"}
+  },
+  "vm_allocation": {
+    "vms_running": 0,
+    "cpu_cores_allocated": 0,
+    "others": 0,
+    "free": 0
+  },
+  "reporter": "<name or contact>",
+  "date_reported": "<YYYY-MM-DD>",
+  "status": "new",
+  "priority": "<critical/high/medium/low>",
+  "milestone": "<target release>",
+  "affected_projects": ["maas"],
+  "assigned_to": "<assignee>",
+  "is_feature_request": false,
+  "reproduction_status": "<reproducible/not reproducible/needs info>",
+  "notes": "<triage comments or escalation notes>"
+}
