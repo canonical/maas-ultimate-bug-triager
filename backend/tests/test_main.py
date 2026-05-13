@@ -5,7 +5,6 @@ from starlette.testclient import TestClient
 from maas_ultimate_bug_triager.config import (
     AIConfig,
     AppConfig,
-    LaunchpadConfig,
     ServerConfig,
 )
 from maas_ultimate_bug_triager.main import create_app
@@ -15,10 +14,6 @@ from maas_ultimate_bug_triager.models.bug import BugDetail, BugSummary
 
 def test_app_starts():
     config = AppConfig(
-        launchpad=LaunchpadConfig(
-            oauth_token="test-token",
-            oauth_token_secret="test-secret",
-        ),
         ai=AIConfig(api_key="test-key"),
         server=ServerConfig(),
     )

@@ -8,8 +8,8 @@ from pydantic import BaseModel
 
 
 class LaunchpadConfig(BaseModel):
-    oauth_token: str
-    oauth_token_secret: str
+    oauth_token: str = ""
+    oauth_token_secret: str = ""
     consumer_key: str = "maas-ultimate-bug-triager"
 
 
@@ -25,7 +25,7 @@ class ServerConfig(BaseModel):
 
 
 class AppConfig(BaseModel):
-    launchpad: LaunchpadConfig
+    launchpad: LaunchpadConfig = LaunchpadConfig()
     ai: AIConfig
     server: ServerConfig
 
@@ -33,4 +33,6 @@ class AppConfig(BaseModel):
 def load_config(path: str | None = None) -> AppConfig:
     config_path = path or os.environ.get("MAAS_TRIAGER_CONFIG") or "config.yaml"
     data = yaml.safe_load(Path(config_path).read_text())
+    if data is None:
+        data = {}
     return AppConfig.model_validate(data)

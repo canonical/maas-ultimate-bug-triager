@@ -18,17 +18,30 @@ logger = logging.getLogger(__name__)
 class LaunchpadService:
     CACHE_TTL = 300
 
-    def __init__(self, config: LaunchpadConfig) -> None:
-        self.config = config
-        logger.debug("Logging in to Launchpad...")
-        start = time.time()
-        self.lp = Launchpad.login(
-            config.consumer_key,
-            config.oauth_token,
-            config.oauth_token_secret,
-            service_root="production",
-        )
-        logger.debug("Launchpad login took %.2fs", time.time() - start)
+    def __init__(
+        self,
+        config: LaunchpadConfig | None = None,
+        lp: Launchpad | None = None,
+    ) -> None:
+        if lp is not None:
+            self.lp = lp
+            self.config = config or LaunchpadConfig()
+        elif config is not None and config.oauth_token and config.oauth_token_secret:
+            self.config = config
+            logger.debug("Logging in to Launchpad...")
+            start = time.time()
+            self.lp = Launchpad.login(
+                config.consumer_key,
+                config.oauth_token,
+                config.oauth_token_secret,
+                service_root="production",
+            )
+            logger.debug("Launchpad login took %.2fs", time.time() - start)
+        else:
+            raise ValueError(
+                "Either a Launchpad instance or config with"
+                " OAuth credentials must be provided"
+            )
         logger.debug("Fetching MAAS project...")
         start = time.time()
         self.project = self.lp.projects["maas"]

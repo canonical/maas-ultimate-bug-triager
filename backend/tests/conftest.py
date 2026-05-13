@@ -6,7 +6,6 @@ from starlette.testclient import TestClient
 from maas_ultimate_bug_triager.config import (
     AIConfig,
     AppConfig,
-    LaunchpadConfig,
     ServerConfig,
 )
 from maas_ultimate_bug_triager.main import create_app
@@ -30,10 +29,6 @@ def mock_ai_service():
 @pytest.fixture
 def client(mock_launchpad_service, mock_ai_service):
     config = AppConfig(
-        launchpad=LaunchpadConfig(
-            oauth_token="test-token",
-            oauth_token_secret="test-secret",
-        ),
         ai=AIConfig(api_key="test-key"),
         server=ServerConfig(),
     )

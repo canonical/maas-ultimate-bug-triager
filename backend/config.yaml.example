@@ -1,6 +1,4 @@
 launchpad:
-  oauth_token: "<oauth-token>"
-  oauth_token_secret: "<oauth-token-secret>"
   consumer_key: "maas-ultimate-bug-triager"
 
 ai:

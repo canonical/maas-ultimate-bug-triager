@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -22,14 +22,10 @@ def mock_lp():
 @pytest.fixture
 def service(mock_lp):
     lp, project = mock_lp
-    with patch(
-        "maas_ultimate_bug_triager.services.launchpad.Launchpad.login",
-        return_value=lp,
-    ):
-        config = LaunchpadConfig(
-            oauth_token="t", oauth_token_secret="s", consumer_key="ck"
-        )
-        svc = LaunchpadService(config)
+    config = LaunchpadConfig(
+        oauth_token="t", oauth_token_secret="s", consumer_key="ck"
+    )
+    svc = LaunchpadService(config=config, lp=lp)
     return svc, lp, project
 
 

@@ -6,6 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from maas_ultimate_bug_triager.api.bugs import router as bugs_router
 from maas_ultimate_bug_triager.api.config import router as config_router
+from maas_ultimate_bug_triager.auth import (
+    get_launchpad_credentials,
+    try_stored_credentials,
+)
 from maas_ultimate_bug_triager.config import AppConfig, load_config
 from maas_ultimate_bug_triager.services.ai import AIService
 from maas_ultimate_bug_triager.services.launchpad import LaunchpadService
@@ -36,10 +40,13 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     app.state.launchpad_service = None
     app.state.ai_service = None
     if config is not None:
+        lp_config = config.launchpad if config.launchpad.oauth_token else None
         try:
-            app.state.launchpad_service = LaunchpadService(config.launchpad)
+            lp = try_stored_credentials(lp_config)
+            if lp is not None:
+                app.state.launchpad_service = LaunchpadService(lp=lp)
         except Exception:
-            pass
+            logger.warning("Failed to authenticate with Launchpad", exc_info=True)
         try:
             app.state.ai_service = AIService(config.ai)
         except Exception:
@@ -62,4 +69,8 @@ def main() -> None:
     import uvicorn
 
     config = load_config()
-    uvicorn.run(create_app(config), host=config.server.host, port=config.server.port)
+    lp_config = config.launchpad if config.launchpad.oauth_token else None
+    lp = get_launchpad_credentials(lp_config)
+    app = create_app(config)
+    app.state.launchpad_service = LaunchpadService(lp=lp)
+    uvicorn.run(app, host=config.server.host, port=config.server.port)
