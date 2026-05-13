@@ -135,7 +135,9 @@ class LaunchpadService:
         owner_name = getattr(owner, "display_name", None) or owner.name
         comments: list[Comment] = []
         t0 = time.time()
-        for msg in bug.messages:
+        for i, msg in enumerate(bug.messages):
+            if i == 0:
+                continue
             msg_owner = msg.owner
             msg_owner_name = getattr(msg_owner, "display_name", None) or msg_owner.name
             comments.append(

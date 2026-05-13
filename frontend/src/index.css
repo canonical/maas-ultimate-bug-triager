@@ -9,6 +9,6 @@
   }
 }
 
-@utility animate-skeleton-pulse {
+.animate-skeleton-pulse {
   animation: skeleton-pulse 2s ease-in-out infinite;
 }

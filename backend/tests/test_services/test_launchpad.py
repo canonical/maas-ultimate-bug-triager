@@ -129,6 +129,15 @@ def test_fetch_bug_details_returns_full_detail(service):
     dt = datetime(2025, 3, 1, tzinfo=timezone.utc)
     msg_dt = datetime(2025, 3, 2, tzinfo=timezone.utc)
 
+    desc_owner = MagicMock()
+    desc_owner.display_name = "Alice"
+    desc_owner.name = "alice"
+
+    desc_msg = MagicMock()
+    desc_msg.owner = desc_owner
+    desc_msg.date_created = dt
+    desc_msg.content = "Bug description"
+
     msg_owner = MagicMock()
     msg_owner.display_name = "Commenter"
     msg_owner.name = "commenter"
@@ -152,7 +161,7 @@ def test_fetch_bug_details_returns_full_detail(service):
         dt,
         ["tag-a"],
         description="Bug description",
-        messages=[msg],
+        messages=[desc_msg, msg],
         attachments=[att],
     )
 
