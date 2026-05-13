@@ -74,19 +74,21 @@ _PROMPT_TEMPLATE = (
     "    - ADD_TAG: tag (string)\n"
     "    - REMOVE_TAG: tag (string)\n"
     "\n"
-    "Always include a SET_STATUS and SET_IMPORTANCE action.\n"
+    "Always include a SET_STATUS action. Only include a SET_IMPORTANCE "
+    "action if you also set the status to Triaged; until a bug is "
+    "Triaged the importance should remain unset.\n"
     "\n"
     "Common triage patterns:\n"
     "- If the bug lacks steps to reproduce → set status to "
-    "Incomplete, add a comment requesting more info\n"
+    "Incomplete, add a comment requesting more info; do not set importance\n"
     "- If the bug is a duplicate → set status to Invalid, add a "
-    "comment noting the duplicate\n"
+    "comment noting the duplicate; do not set importance\n"
     "- If the bug has clear reproduction steps and seems valid → "
     "set status to Triaged, set appropriate importance\n"
     "- If the bug is about a feature request rather than a bug → "
-    'set status to Opinion, add tag "feature-request"\n'
+    'set status to Opinion, add tag "feature-request"; do not set importance\n'
     "- If the bug report is spam or completely irrelevant → "
-    "set status to Invalid"
+    "set status to Invalid; do not set importance"
 )
 
 
