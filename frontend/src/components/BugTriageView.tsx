@@ -174,7 +174,7 @@ export default function BugTriageView() {
 
       <div>
         <h3 className="mb-3 text-lg font-semibold text-white">Comments</h3>
-        {loading ? <CommentsSkeleton /> : <CommentTimeline comments={bugDetail.comments} />}
+        <CommentTimeline comments={bugDetail.comments} />
       </div>
 
       <div>
