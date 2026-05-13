@@ -5,32 +5,7 @@ import { useToast } from "../hooks/useToast";
 import { TriageStatus } from "../types";
 import CommentTimeline from "./CommentTimeline";
 import ActionEditor from "./ActionEditor";
-
-function Spinner() {
-  return (
-    <div className="flex items-center justify-center py-4">
-      <svg
-        className="h-6 w-6 animate-spin text-blue-400"
-        viewBox="0 0 24 24"
-        fill="none"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-        />
-      </svg>
-    </div>
-  );
-}
+import { CommentsSkeleton, AnalysisSkeleton, DetailSkeleton } from "./Skeleton";
 
 function StatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
@@ -133,7 +108,7 @@ export default function BugTriageView() {
   }
 
   if (loading && !bugDetail) {
-    return <Spinner />;
+    return <DetailSkeleton />;
   }
 
   if (error) {
@@ -199,7 +174,7 @@ export default function BugTriageView() {
 
       <div>
         <h3 className="mb-3 text-lg font-semibold text-white">Comments</h3>
-        {loading ? <Spinner /> : <CommentTimeline comments={bugDetail.comments} />}
+        {loading ? <CommentsSkeleton /> : <CommentTimeline comments={bugDetail.comments} />}
       </div>
 
       <div>
@@ -224,7 +199,7 @@ export default function BugTriageView() {
       <div>
         <h3 className="mb-3 text-lg font-semibold text-white">AI Analysis</h3>
         {loading ? (
-          <Spinner />
+          <AnalysisSkeleton />
         ) : analysis ? (
           <div className="rounded border border-gray-700 bg-gray-800 p-4">
             <p className="whitespace-pre-wrap text-sm text-gray-300">
