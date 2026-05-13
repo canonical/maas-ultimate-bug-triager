@@ -97,9 +97,39 @@ async def apply_actions(
 ) -> ApplyActionsResponse:
     logger.debug("POST /api/bugs/%d/actions: %d actions", bug_id, len(body.actions))
     start = time.time()
+
+    has_comment = any(a.type == ActionType.ADD_COMMENT for a in body.actions)
+    current_status = None
+    if has_comment:
+        try:
+            current_status = service.fetch_bug_details(bug_id).status
+        except Exception:
+            pass
+
     applied: list[str] = []
     errors: list[dict] = []
-    for action in body.actions:
+
+    if has_comment and current_status == "Incomplete":
+        try:
+            bug_task_url = service.get_bug_task_url(bug_id)
+            service.set_status(bug_task_url, "New")
+            applied.append(ActionType.SET_STATUS.value)
+        except Exception as e:
+            errors.append({"action_type": ActionType.SET_STATUS.value, "error": str(e)})
+
+    comment_actions = [a for a in body.actions if a.type == ActionType.ADD_COMMENT]
+    tag_actions = [
+        a
+        for a in body.actions
+        if a.type in (ActionType.ADD_TAG, ActionType.REMOVE_TAG)
+    ]
+    importance_actions = [
+        a for a in body.actions if a.type == ActionType.SET_IMPORTANCE
+    ]
+    status_actions = [a for a in body.actions if a.type == ActionType.SET_STATUS]
+    reordered = comment_actions + tag_actions + importance_actions + status_actions
+
+    for action in reordered:
         t0 = time.time()
         try:
             if action.type == ActionType.ADD_COMMENT:

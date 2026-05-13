@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from unittest.mock import call
 
 from starlette.testclient import TestClient
 
@@ -205,3 +206,133 @@ def test_cors_headers_present(client: TestClient):
         response.headers["access-control-allow-origin"]
         == "http://localhost:5173"
     )
+
+
+def test_apply_actions_reorders_comment_before_status(
+    client: TestClient, mock_launchpad_service
+):
+    mock_launchpad_service.get_bug_task_url.return_value = (
+        "http://lp/bug/1/task"
+    )
+    mock_launchpad_service.fetch_bug_details.return_value = BugDetail(
+        id=1,
+        title="Bug",
+        status="New",
+        importance="Undecided",
+        owner="user",
+        date_created=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        tags=[],
+        description="d",
+        comments=[],
+        attachments=[],
+    )
+    body = {
+        "actions": [
+            {"type": "SET_STATUS", "status": "Triaged"},
+            {"type": "ADD_COMMENT", "content": "triaging comment"},
+        ]
+    }
+    response = client.post("/api/bugs/1/actions", json=body)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["applied"] == ["ADD_COMMENT", "SET_STATUS"]
+    assert data["errors"] == []
+    assert mock_launchpad_service.method_calls[0] == call.fetch_bug_details(1)
+    assert mock_launchpad_service.method_calls[1] == call.add_comment(
+        1, "triaging comment"
+    )
+    assert mock_launchpad_service.method_calls[2] == call.get_bug_task_url(1)
+    assert mock_launchpad_service.method_calls[3] == call.set_status(
+        "http://lp/bug/1/task", "Triaged"
+    )
+
+
+def test_apply_actions_incomplete_bug_gets_reset_to_new(
+    client: TestClient, mock_launchpad_service
+):
+    mock_launchpad_service.get_bug_task_url.return_value = (
+        "http://lp/bug/1/task"
+    )
+    mock_launchpad_service.fetch_bug_details.return_value = BugDetail(
+        id=1,
+        title="Bug",
+        status="Incomplete",
+        importance="Undecided",
+        owner="user",
+        date_created=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        tags=[],
+        description="d",
+        comments=[],
+        attachments=[],
+    )
+    body = {
+        "actions": [
+            {"type": "ADD_COMMENT", "content": "need more info"},
+            {"type": "SET_STATUS", "status": "Incomplete"},
+        ]
+    }
+    response = client.post("/api/bugs/1/actions", json=body)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["applied"] == ["SET_STATUS", "ADD_COMMENT", "SET_STATUS"]
+    assert data["errors"] == []
+    assert mock_launchpad_service.method_calls[0] == call.fetch_bug_details(1)
+    assert mock_launchpad_service.method_calls[1] == call.get_bug_task_url(1)
+    assert mock_launchpad_service.method_calls[2] == call.set_status(
+        "http://lp/bug/1/task", "New"
+    )
+    assert mock_launchpad_service.method_calls[3] == call.add_comment(
+        1, "need more info"
+    )
+    assert mock_launchpad_service.method_calls[4] == call.get_bug_task_url(1)
+    assert mock_launchpad_service.method_calls[5] == call.set_status(
+        "http://lp/bug/1/task", "Incomplete"
+    )
+
+
+def test_apply_actions_non_incomplete_bug_no_reset(
+    client: TestClient, mock_launchpad_service
+):
+    mock_launchpad_service.get_bug_task_url.return_value = (
+        "http://lp/bug/1/task"
+    )
+    mock_launchpad_service.fetch_bug_details.return_value = BugDetail(
+        id=1,
+        title="Bug",
+        status="New",
+        importance="Undecided",
+        owner="user",
+        date_created=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        tags=[],
+        description="d",
+        comments=[],
+        attachments=[],
+    )
+    body = {
+        "actions": [
+            {"type": "ADD_COMMENT", "content": "triaging"},
+            {"type": "SET_STATUS", "status": "Triaged"},
+        ]
+    }
+    response = client.post("/api/bugs/1/actions", json=body)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["applied"] == ["ADD_COMMENT", "SET_STATUS"]
+    assert data["errors"] == []
+
+
+def test_apply_actions_no_comment_no_fetch(client: TestClient, mock_launchpad_service):
+    mock_launchpad_service.get_bug_task_url.return_value = (
+        "http://lp/bug/1/task"
+    )
+    body = {
+        "actions": [
+            {"type": "SET_STATUS", "status": "Triaged"},
+            {"type": "ADD_TAG", "tag": "triaged"},
+        ]
+    }
+    response = client.post("/api/bugs/1/actions", json=body)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["applied"] == ["ADD_TAG", "SET_STATUS"]
+    mock_launchpad_service.fetch_bug_details.assert_not_called()

@@ -83,7 +83,13 @@ def test_fetch_untriaged_bugs_returns_correct_list(service):
         1, "Bug One", "New", "Undecided", "Alice", dt1, ["tag1"]
     )
     task2, bug2, owner2 = _make_bug_task(
-        2, "Bug Two", "Incomplete", "Medium", "Bob", dt2, ["tag2", "tag3"]
+        2,
+        "Bug Two",
+        "Incomplete (with response)",
+        "Medium",
+        "Bob",
+        dt2,
+        ["tag2", "tag3"],
     )
     project.searchTasks.return_value = [task1, task2]
 
@@ -102,13 +108,15 @@ def test_fetch_untriaged_bugs_returns_correct_list(service):
     assert result[1] == BugSummary(
         id=2,
         title="Bug Two",
-        status="Incomplete",
+        status="Incomplete (with response)",
         importance="Medium",
         owner="Bob",
         date_created=dt2,
         tags=["tag2", "tag3"],
     )
-    project.searchTasks.assert_called_once_with(status=["New", "Incomplete"])
+    project.searchTasks.assert_called_once_with(
+        status=["New", "Incomplete (with response)"]
+    )
 
 
 def test_fetch_untriaged_bugs_uses_cache(service):

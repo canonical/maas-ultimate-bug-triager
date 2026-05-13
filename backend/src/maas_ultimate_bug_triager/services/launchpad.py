@@ -72,7 +72,7 @@ class LaunchpadService:
             return self._cache[cache_key][1]
         logger.debug("fetch_untriaged_bugs: cache miss, querying Launchpad...")
         start = time.time()
-        tasks = self.project.searchTasks(status=["New", "Incomplete"])
+        tasks = self.project.searchTasks(status=["New", "Incomplete (with response)"])
         logger.debug("searchTasks returned in %.2fs", time.time() - start)
         result: list[BugSummary] = []
         for task in tasks:
